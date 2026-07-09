@@ -1,0 +1,30 @@
+---
+const res = await fetch("/data/meetings.json");
+const meetings = await res.json();
+---
+
+<html lang="en">
+  <head>
+    <title>AA Meeting Reviews – Global</title>
+  </head>
+  <body>
+    <h1>AA Meeting Review & Scoring Tool</h1>
+    <p>
+      Community-driven, anonymous, positive reviews of Alcoholics Anonymous meetings.
+      Focused on recovery and support.
+    </p>
+
+    <section>
+      {meetings.map(meeting => (
+        <article class="meeting-card">
+          <h2>{meeting.name}</h2>
+          <p>{meeting.city}, {meeting.state} {meeting.country}</p>
+          <p>{meeting.day} at {meeting.time}</p>
+          <p>Type: {meeting.type} · Format: {meeting.format}</p>
+
+          <a href={`/meeting/${meeting.id}`}>View details & reviews</a>
+        </article>
+      ))}
+    </section>
+  </body>
+</html>
