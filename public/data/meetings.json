@@ -1,0 +1,16 @@
+[
+  {
+    "id": "meeting-001",
+    "name": "Downtown Serenity Group",
+    "country": "USA",
+    "city": "San Francisco",
+    "state": "CA",
+    "address": "123 Main St, San Francisco, CA",
+    "day": "Monday",
+    "time": "7:00 PM",
+    "type": "Open",
+    "format": "In-person",
+    "notes": "Speaker meeting, wheelchair accessible",
+    "mapsUrl": "https://maps.google.com/?q=123+Main+St+San+Francisco+CA"
+  }
+]
