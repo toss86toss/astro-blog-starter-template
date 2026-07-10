@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 const res = await fetch("/data/meetings.json");
 const meetings = await res.json();
 ---
