@@ -1,0 +1,137 @@
+---
+const { id } = Astro.params;
+
+const meetingsRes = await fetch("/data/meetings.json");
+const meetings = await meetingsRes.json();
+const meeting = meetings.find(m => m.id === id);
+
+const reviewsRes = await fetch(`/api/meetings/${id}/reviews`);
+const reviews = await reviewsRes.json();
+
+const avg = (field) => {
+  if (!reviews.length) return "No ratings yet";
+  const sum = reviews.reduce((s, r) => s + (r.ratings[field] || 0), 0);
+  return (sum / reviews.length).toFixed(1);
+};
+
+const allTags = Array.from(
+  new Set(reviews.flatMap(r => r.tags || []))
+);
+---
+
+<html lang="en">
+  <head>
+    <title>{meeting.name} – AA Meeting Reviews</title>
+  </head>
+  <body>
+    <h1>{meeting.name}</h1>
+    <p>{meeting.address}</p>
+    <p>{meeting.day} at {meeting.time}</p>
+    <p>Type: {meeting.type} · Format: {meeting.format}</p>
+    <p>{meeting.notes}</p>
+
+    <a href={meeting.mapsUrl} target="_blank" rel="noopener noreferrer">
+      Get directions
+    </a>
+
+    <h2>Ratings</h2>
+    <ul>
+      <li>Welcoming: {avg("welcoming")} / 5</li>
+      <li>Recovery-focused: {avg("recoveryFocus")} / 5</li>
+      <li>Safety: {avg("safety")} / 5</li>
+    </ul>
+
+    {allTags.length > 0 && (
+      <>
+        <h3>Common tags</h3>
+        <ul>
+          {allTags.map(tag => <li>{tag}</li>)}
+        </ul>
+      </>
+    )}
+
+    <h2>Reviews</h2>
+    {reviews.length === 0 ? (
+      <p>No reviews yet. Be the first to leave a positive, recovery-focused review.</p>
+    ) : (
+      <ul>
+        {reviews.map(review => (
+          <li>
+            <strong>
+              Welcoming {review.ratings.welcoming}/5 ·
+              Recovery {review.ratings.recoveryFocus}/5 ·
+              Safety {review.ratings.safety}/5
+            </strong>
+            <br />
+            {review.tags && review.tags.length > 0 && (
+              <em>Tags: {review.tags.join(", ")}</em>
+            )}
+            <br />
+            <span>{review.comment}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <h2>Leave an anonymous, positive review</h2>
+    <form id="review-form">
+      <label>
+        Welcoming (1–5)
+        <input type="number" name="welcoming" min="1" max="5" required />
+      </label>
+
+      <label>
+        Recovery-focused (1–5)
+        <input type="number" name="recoveryFocus" min="1" max="5" required />
+      </label>
+
+      <label>
+        Safety (1–5)
+        <input type="number" name="safety" min="1" max="5" required />
+      </label>
+
+      <label>
+        Tags (comma-separated, e.g. "Good for newcomers, Women-friendly")
+        <input type="text" name="tags" />
+      </label>
+
+      <label>
+        Comment (positive, recovery-focused, anonymous)
+        <textarea name="comment" rows="3" maxlength="500"></textarea>
+      </label>
+
+      <button type="submit">Submit review</button>
+    </form>
+
+    <script>
+      const form = document.getElementById("review-form");
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+
+        const payload = {
+          ratings: {
+            welcoming: Number(data.get("welcoming")),
+            recoveryFocus: Number(data.get("recoveryFocus")),
+            safety: Number(data.get("safety"))
+          },
+          tags: (data.get("tags") || "")
+            .split(",")
+            .map(t => t.trim())
+            .filter(Boolean),
+          comment: (data.get("comment") || "").slice(0, 500)
+        };
+
+        await fetch(`/api/meetings/${"{id}"}/reviews`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        form.reset();
+        alert("Thank you for your anonymous, recovery-focused review.");
+        location.reload();
+      });
+    </script>
+  </body>
+</html>
